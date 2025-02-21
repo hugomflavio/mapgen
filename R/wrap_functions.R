@@ -1,4 +1,16 @@
-wrapped_distance <- function(i, refs, size) {
+#' Calculate distance between a point and references on a line
+#' 
+#' Taking into account that the line wraps.
+#' 
+#' @param from the value we're measuring from
+#' @param to one or more values to which we're measuring
+#' @param size the length of the line
+#' 
+#' @return a vector of distances to the values in "to"
+#' 
+#' @export 
+#' 
+wrapped_distance <- function(from, to, size) {
   # centres: 20, 90
   # pixel: 2
   # map size 100
@@ -23,29 +35,41 @@ wrapped_distance <- function(i, refs, size) {
   # so... everything before 49 becomes itself + 100?
   # seems right. so we need to decide first if
   # we're working on the left or right side of the map.
-  if (i == ceiling(size/2)) {
+  if (from == ceiling(size/2)) {
     # we're in the centre, no need to adjust
-    dists <- refs - i
+    dists <- refs - from
   }
-  if (i < ceiling(size/2)) {
+  if (from < ceiling(size/2)) {
     # we're before half
-    right_end <- i + floor(size/2)
+    right_end <- from + floor(size/2)
     aux <- refs
     to_move <- aux > right_end
     aux[to_move] <- aux[to_move] - size
-    dists <- aux - i
+    dists <- aux - from
   }
-  if (i > ceiling(size/2)) {
+  if (from > ceiling(size/2)) {
     # we're after half
-    left_end <- i - floor(size/2)
+    left_end <- from - floor(size/2)
     aux <- refs
     to_move <- aux < left_end
     aux[to_move] <- aux[to_move] + size
-    dists <- aux - i
+    dists <- aux - from
   }
   return(dists)
 }
 
+#' Calculate wrapped ranges along a line.
+#' 
+#' Taking into account that the line wraps.
+#' 
+#' @param i the centre of the range
+#' @param spread the width of the range to each side of i
+#' @param size the length of the line
+#' 
+#' @return a vector of values within the range
+#' 
+#' @export 
+#' 
 wrapped_range <- function(i, spread, size) {
   left <- i - spread
   if (left < 1) {

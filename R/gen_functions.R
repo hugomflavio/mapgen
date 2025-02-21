@@ -1,3 +1,13 @@
+#' Generate tectonic plates
+#' 
+#' @param n_plates number of plates on the map
+#' @param map_x map x dimension in tiles
+#' @param map_y map y dimension in tiles
+#' 
+#' @return a list containing plate information, vector information, and the map
+#' 
+#' @export
+#' 
 gen_plates <- function(n_plates, map_x, map_y = map_x) {
   plates <- data.frame(id = 1:n_plates,
                          centre_x = round(runif(n = n_plates, 1, map_x)),

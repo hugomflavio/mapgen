@@ -2,10 +2,10 @@
 #'
 #' @docType package
 #' @name mapgen
-#' @import graphics
 #' @import patchwork
-#' @import stats
-#' @import units
 #' @import utils
+#' @import stats
+#' @import utils
+#' @import graphics
 #' 
 "_PACKAGE"

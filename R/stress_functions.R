@@ -1,3 +1,13 @@
+#' Calculate stress between plates
+#' 
+#' @param world A world list; the output of \code{\link{gen_plates}}
+#' @param spread How many tiles away from the plate border should stress
+#'   start being felt? Defaults to 5.
+#' 
+#' @return an updated world list, where the map contains a stress column
+#' 
+#' @export
+#' 
 calc_stress <- function(world, spread = 5) {
   map_x <- max(world$map$x) 
   map_y <- max(world$map$y)
@@ -35,6 +45,18 @@ calc_stress <- function(world, spread = 5) {
   return(world)
 }
 
+#' Scale stress values
+#' 
+#' \code{\link{calc_stress}} can generate different ranges of values for
+#' different parameters. This function scales stress to roughly -1000 to 1000.
+#' 
+#' @param world A world list containing stress values. The output of
+#'   \code{\link{calc_stress}}.
+#' 
+#' @return an updated world list where the stress data has been scaled.
+#' 
+#' @export
+#' 
 scale_stress <- function(world) {
   world$map$stress <- world$map$stress - mean(world$map$stress)
   world$map$stress <- world$map$stress / sd(world$map$stress)
