@@ -8,12 +8,16 @@
 #' 
 #' @export
 #' 
-gen_plates <- function(n_plates, map_x, map_y = map_x) {
+gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
+                       dist_method = c("square", "direct")) {
   plates <- data.frame(id = 1:n_plates,
-                         centre_x = round(runif(n = n_plates, 1, map_x)),
-                         centre_y = round(runif(n = n_plates, 1, map_y)),
-                         force_x = runif(n = n_plates, -1, 1),
-                         force_y = runif(n = n_plates, -1, 1))
+                       centre_x = round(runif(n = n_plates, 1, map_x)),
+                       centre_y = round(runif(n = n_plates, 1, map_y)),
+                       force_x = runif(n = n_plates, -1, 1),
+                       force_y = runif(n = n_plates, -1, 1),
+                       gravity = runif(n = n_plates, gravity_range[1],
+                                       gravity_range[2]),
+                       base_height = runif(n = n_plates, 1, 100))
 
   plates$force_scaled_x <- plates$centre_x + plates$force_x * (map_x/5)
   plates$force_scaled_y <- plates$centre_y + plates$force_y * (map_y/5)
@@ -21,15 +25,21 @@ gen_plates <- function(n_plates, map_x, map_y = map_x) {
   map <- expand.grid(x = 1:map_x, y = 1:map_y)
 
   map$plate <- apply(map, 1, function(r) {
-    x_dists <- abs(wrapped_distance(r["x"], plates$centre_x, map_x))
-    y_dists <- abs(wrapped_distance(r["y"], plates$centre_y, map_y))
-    return(which.min(sqrt(x_dists^2 + y_dists^2)))
+    x_dists <- abs(wrapped_distance(r["x"], plates$centre_x, map_x)) * plates$gravity
+    y_dists <- abs(wrapped_distance(r["y"], plates$centre_y, map_y)) * plates$gravity
+    if (dist_method == "direct") {
+      output <- which.min(x_dists + y_dists)
+    } else {
+      output <- which.min(sqrt(x_dists^2 + y_dists^2))
+    }
+    return(output)
   })
 
   map$force_x <- plates$force_x[map$plate]
   map$force_y <- plates$force_y[map$plate]
   map$centre_x <- plates$centre_x[map$plate]
   map$centre_y <- plates$centre_y[map$plate]
+  map$stress <- plates$base_height[map$plate]
 
   part1 <- plates[, c("id", "centre_x", "centre_y")]
   part2 <- plates[, c("id", "force_scaled_x", "force_scaled_y")]
@@ -61,10 +71,11 @@ gen_plates <- function(n_plates, map_x, map_y = map_x) {
 #' @export
 #' 
 gen_world <- function(n_plates, spread, weight = 1, noise = 50,
-                      map_x, map_y = map_x) {
+                      map_x, map_y = map_x, gravity_range = c(1, 1)) {
   # make the worlds
   recipient <- lapply(1:length(n_plates), function(i) {
-    world <- gen_plates(n_plates[i], map_x = map_x, map_y = map_y)
+    world <- gen_plates(n_plates[i], map_x = map_x, map_y = map_y,
+                        gravity_range = gravity_range)
     world <- calc_stress(world, spread = spread[i])
     world <- scale_stress(world)
   })
