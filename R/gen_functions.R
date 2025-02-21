@@ -9,7 +9,10 @@
 #' @export
 #' 
 gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
-                       dist_method = c("square", "direct")) {
+                       dist_method = c("square", "manhattan")) {
+
+  dist_method <- match.arg(dist_method)
+
   plates <- data.frame(id = 1:n_plates,
                        centre_x = round(runif(n = n_plates, 1, map_x)),
                        centre_y = round(runif(n = n_plates, 1, map_y)),
@@ -25,9 +28,9 @@ gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
   map <- expand.grid(x = 1:map_x, y = 1:map_y)
 
   map$plate <- apply(map, 1, function(r) {
-    x_dists <- abs(wrapped_distance(r["x"], plates$centre_x, map_x)) * plates$gravity
-    y_dists <- abs(wrapped_distance(r["y"], plates$centre_y, map_y)) * plates$gravity
-    if (dist_method == "direct") {
+    x_dists <- abs(wrapped_distance(r["x"], plates$centre_x, map_x)) / plates$gravity
+    y_dists <- abs(wrapped_distance(r["y"], plates$centre_y, map_y)) / plates$gravity
+    if (dist_method == "manhattan") {
       output <- which.min(x_dists + y_dists)
     } else {
       output <- which.min(sqrt(x_dists^2 + y_dists^2))
@@ -71,11 +74,16 @@ gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
 #' @export
 #' 
 gen_world <- function(n_plates, spread, weight = 1, noise = 50,
-                      map_x, map_y = map_x, gravity_range = c(1, 1)) {
+                      map_x, map_y = map_x, gravity_range = c(1, 1),
+                      dist_method = c("square", "manhattan")) {
+
+  dist_method <- match.arg(dist_method)
+
   # make the worlds
   recipient <- lapply(1:length(n_plates), function(i) {
     world <- gen_plates(n_plates[i], map_x = map_x, map_y = map_y,
-                        gravity_range = gravity_range)
+                        gravity_range = gravity_range,
+                        dist_method = dist_method)
     world <- calc_stress(world, spread = spread[i])
     world <- scale_stress(world)
   })
