@@ -38,3 +38,54 @@ gen_plates <- function(n_plates, map_x, map_y = map_x) {
 
   return(list(plates = plates, vectors = vectors, map = map))
 }
+
+#' wrapper to generate a world
+#' 
+#' Uses one or more sets of plates to create a complex surface.
+#' 
+#' @param n_plates The number of plates in the map. Can be either 1 value
+#'   for a world generated from a single map, or a vector of values for a world
+#'   generated of several tectonic maps superimposed.
+#' @param spread How many tiles away from the plate border should stress
+#'   start being felt? Must be a vector of the same length as n_plates
+#' @param weight when more than one map is generated, how strongly should
+#'   subsequent maps imprint on the first? defaults to 1; i.e. sub-maps fully
+#'   imprint on first map.
+#' @param noise Strength of the noise to add to the heights at the end of the
+#'   process. noise is the standard deviation of the normal distribution from
+#'   which the values are drawn. Set to 0 to not add noise.
+#' @inheritParams gen_plates
+#' 
+#' @return A world object.
+#' 
+#' @export
+#' 
+gen_world <- function(n_plates, spread, weight = 1, noise = 50,
+                      map_x, map_y = map_x) {
+  # make the worlds
+  recipient <- lapply(1:length(n_plates), function(i) {
+    world <- gen_plates(n_plates[i], map_x = map_x, map_y = map_y)
+    world <- calc_stress(world, spread = spread[i])
+    world <- scale_stress(world)
+  })
+
+  # use the first world as the reference
+  final_world <- recipient[[1]]
+
+  # merge any other worlds to the first one
+  if (length(n_plates) > 1) {
+    for (i in 2:length(n_plates)) {
+      final_world$map$stress <- 
+        final_world$map$stress + recipient[[i]]$map$stress * weight
+    }
+  }
+
+  final_world <- scale_stress(final_world)
+
+  if (noise > 0) {
+    aux <- rnorm(nrow(final_world$map), 0, noise)
+    final_world$map$stress <- final_world$map$stress + aux
+  }
+
+  return(final_world)
+}
