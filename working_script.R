@@ -3,11 +3,27 @@ devtools::load_all()
 library("ggplot2")
 
 set.seed(1)
-world <- gen_world(n_plates = c(10, 50), spread = c(20, 5),
+world <- gen_world(n_plates = c(30), spread = c(5),
                    weight = 0.2,
                    map_x = 120, map_y = 120,
-                   gravity_range = c(0.4, 1),
+                   gravity_range = c(0, 1),
                    dist_method = "square")
+
+p_plates <- ggplot(data = world$map)
+p_plates <- p_plates + geom_tile(aes(x = x, y = y, fill = as.factor(plate)))
+p_plates <- p_plates + geom_point(data = world$plates, aes(x = centre_x, y = centre_y))
+p_plates <- p_plates + geom_text(data = world$plates, aes(x = centre_x, y = centre_y, label = round(gravity, 3)),
+                                 position = position_nudge(x = 0, y = 2))
+# p_plates <- p_plates + geom_line(data = world$vectors, aes(x = x, y = y, group = id))
+p_plates <- p_plates + guides(fill = "none")
+p_plates
+
+
+
+
+
+
+
 
 world <- classify_heights(world, breaks = c("deep_water" = 0,
                                             "water" = 0.55,
@@ -16,21 +32,6 @@ world <- classify_heights(world, breaks = c("deep_water" = 0,
                                             "high" = 0.9,
                                             "peaks" = 0.98))
 
-
-# p_plates <- ggplot(data = world$map)
-# p_plates <- p_plates + geom_tile(aes(x = x, y = y, fill = as.factor(plate)))
-# p_plates <- p_plates + geom_point(data = world$plates, aes(x = centre_x, y = centre_y))
-# p_plates <- p_plates + geom_text(data = world$plates, aes(x = centre_x, y = centre_y, label = round(gravity, 3)),
-#                                  position = position_nudge(x = 0, y = 2))
-# p_plates <- p_plates + geom_line(data = world$vectors, aes(x = x, y = y, group = id))
-# p_plates <- p_plates + guides(fill = "none")
-# p_plates
-
-# p_stress_final <- ggplot(data = world$map)
-# p_stress_final <- p_stress_final + geom_tile(aes(x = x, y = y, fill = stress))
-# p_stress_final
-
-
 map_colours <- c("deep_water" = "#3d74f5",
                  "water" = "#27cff5",
                  "low" = "#65f0a8",
@@ -38,13 +39,22 @@ map_colours <- c("deep_water" = "#3d74f5",
                  "high" = "#8ad184",
                  "peaks" = "#ced6ce")
 
+p_stress_final <- ggplot(data = world$map)
+p_stress_final <- p_stress_final + geom_tile(aes(x = x, y = y, fill = stress))
+
 p_world <- ggplot(data = world$map)
 p_world <- p_world + geom_tile(aes(x = x, y = y, fill = topography))
 p_world <- p_world + scale_fill_manual(values = map_colours)
-p_world
-
 
 p_stress_final + p_world
+
+
+
+
+
+
+
+
 
 world$map$land <- factor(world$map$topography, levels = rev(levels(world$map$topography)))
 world$map$land <- as.numeric(world$map$land) - 1
