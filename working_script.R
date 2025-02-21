@@ -3,9 +3,11 @@ devtools::load_all()
 library("ggplot2")
 
 set.seed(1)
-world <- gen_world(n_plates = c(10), spread = c(5),
+world <- gen_world(n_plates = c(10, 50), spread = c(20, 5),
+                   weight = 0.2,
                    map_x = 120, map_y = 120,
-                   gravity_range = c(0.4, 1))
+                   gravity_range = c(0.4, 1),
+                   dist_method = "square")
 
 world <- classify_heights(world, breaks = c("deep_water" = 0,
                                             "water" = 0.55,
@@ -15,16 +17,18 @@ world <- classify_heights(world, breaks = c("deep_water" = 0,
                                             "peaks" = 0.98))
 
 
-p_plates <- ggplot(data = world$map)
-p_plates <- p_plates + geom_tile(aes(x = x, y = y, fill = as.factor(plate)))
-p_plates <- p_plates + geom_point(data = world$plates, aes(x = centre_x, y = centre_y))
-p_plates <- p_plates + geom_line(data = world$vectors, aes(x = x, y = y, group = id))
-p_plates <- p_plates + guides(fill = "none")
-p_plates
+# p_plates <- ggplot(data = world$map)
+# p_plates <- p_plates + geom_tile(aes(x = x, y = y, fill = as.factor(plate)))
+# p_plates <- p_plates + geom_point(data = world$plates, aes(x = centre_x, y = centre_y))
+# p_plates <- p_plates + geom_text(data = world$plates, aes(x = centre_x, y = centre_y, label = round(gravity, 3)),
+#                                  position = position_nudge(x = 0, y = 2))
+# p_plates <- p_plates + geom_line(data = world$vectors, aes(x = x, y = y, group = id))
+# p_plates <- p_plates + guides(fill = "none")
+# p_plates
 
-p_stress_final <- ggplot(data = world$map)
-p_stress_final <- p_stress_final + geom_tile(aes(x = x, y = y, fill = stress))
-p_stress_final
+# p_stress_final <- ggplot(data = world$map)
+# p_stress_final <- p_stress_final + geom_tile(aes(x = x, y = y, fill = stress))
+# p_stress_final
 
 
 map_colours <- c("deep_water" = "#3d74f5",
@@ -52,7 +56,7 @@ world$map$land[!(world$map$topography %in% c("deep_water", "water"))] <- 1
 
 p_world <- ggplot(data = world$map)
 p_world <- p_world + geom_tile(aes(x = x, y = y, fill = topography))
-p_world <- p_world + geom_contour(aes(x = x, y = y, z = land))
+p_world <- p_world + geom_contour(aes(x = x, y = y, z = stress))
 p_world <- p_world + scale_fill_manual(values = map_colours)
 p_world
 
