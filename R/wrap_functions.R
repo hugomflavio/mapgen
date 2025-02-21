@@ -37,12 +37,12 @@ wrapped_distance <- function(from, to, size) {
   # we're working on the left or right side of the map.
   if (from == ceiling(size/2)) {
     # we're in the centre, no need to adjust
-    dists <- refs - from
+    dists <- to - from
   }
   if (from < ceiling(size/2)) {
     # we're before half
     right_end <- from + floor(size/2)
-    aux <- refs
+    aux <- to
     to_move <- aux > right_end
     aux[to_move] <- aux[to_move] - size
     dists <- aux - from
@@ -50,7 +50,7 @@ wrapped_distance <- function(from, to, size) {
   if (from > ceiling(size/2)) {
     # we're after half
     left_end <- from - floor(size/2)
-    aux <- refs
+    aux <- to
     to_move <- aux < left_end
     aux[to_move] <- aux[to_move] + size
     dists <- aux - from
