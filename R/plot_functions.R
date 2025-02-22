@@ -66,3 +66,11 @@ plot_land <- function(world, fill = c("white", "grey")) {
   p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
   return(p)
 }
+
+plot_temperature <- function(world) {
+  p <- ggplot(data = world$map)
+  p <- p + geom_contour(aes(x = x, y = y, z = height))
+  p <- p + geom_tile(aes(x = x, y = y, fill = temperature_real), alpha = 0.7)
+  p <- p + scale_fill_gradient2(low = "blue", mid = "white", high = "red")
+  return(p)
+}
