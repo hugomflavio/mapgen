@@ -20,7 +20,23 @@ classify_heights <- function(world, breaks) {
   }
 
   world$map$topography <- factor(world$map$topography,
-                               levels = rev(names(breaks)))
+                               levels = names(breaks))
+
+  report <- as.data.frame(rev(table(world$map$topography)))
+  colnames(report) <- c("type", "n_tiles")
+  report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
+
+  message("Tile totals:")
+  report |>
+    print(topn = nrow(report)) |>
+    capture.output() |>
+    sub("^\\d", " ", x = _) |>
+    paste0(collapse = "\n") |>
+    message()
+
+  world$map$land <- TRUE
+  world$map$land[grepl("water", world$topography)] <- FALSE
+
   return(world)
 }
 
@@ -46,5 +62,18 @@ classify_temps <- function(world, breaks) {
 
   world$map$biome <- factor(world$map$biome,
                             levels = rev(names(breaks)))
+
+  report <- as.data.frame(rev(table(world$map$biome)))
+  colnames(report) <- c("type", "n_tiles")
+  report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
+
+  message("Tile totals:")
+  report |>
+    print(topn = nrow(report)) |>
+    capture.output() |>
+    sub("^\\d", " ", x = _) |>
+    paste0(collapse = "\n") |>
+    message()
+
   return(world)
 }
