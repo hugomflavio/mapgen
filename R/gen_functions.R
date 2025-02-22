@@ -49,6 +49,11 @@ gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(0.2, 1)
   colnames(part1) <- colnames(part2) <- c("id", "x", "y")
   vectors <- rbind(part1, part2)
 
+  tiles_per_plate <- table(map$plate)
+  plates$n_tiles <- 0
+  link <- match(plates$id, names(tiles_per_plate))
+  plates$n_tiles[link] <- tiles_per_plate[link]
+
   return(list(plates = plates, vectors = vectors, map = map))
 }
 
