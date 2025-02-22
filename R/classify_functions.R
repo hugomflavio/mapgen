@@ -22,6 +22,13 @@ classify_heights <- function(world, breaks) {
   world$map$topography <- factor(world$map$topography,
                                levels = names(breaks))
 
+  world$map$land <- TRUE
+  world$map$land[grepl("water", world$map$topography)] <- FALSE
+
+  world$map$height <- world$map$stress
+  world$map$height <- world$map$height - min(world$map$height[world$map$land])
+  world$map$height[world$map$height < 0] <- 0
+
   report <- as.data.frame(rev(table(world$map$topography)))
   colnames(report) <- c("type", "n_tiles")
   report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
@@ -34,8 +41,6 @@ classify_heights <- function(world, breaks) {
     paste0(collapse = "\n") |>
     message()
 
-  world$map$land <- TRUE
-  world$map$land[grepl("water", world$map$topography)] <- FALSE
 
   return(world)
 }
@@ -53,17 +58,17 @@ classify_heights <- function(world, breaks) {
 #' @export
 #' 
 classify_temps <- function(world, breaks) {
-  world$map$biome <- NA
+  world$map$temperature_zone <- NA
 
   for (i in 1:length(breaks)) {
-    these <- world$map$temperature >= breaks[i]
-    world$map$biome[these] <- names(breaks)[i]
+    these <- world$map$temperature_real >= breaks[i]
+    world$map$temperature_zone[these] <- names(breaks)[i]
   }
 
-  world$map$biome <- factor(world$map$biome,
+  world$map$temperature_zone <- factor(world$map$temperature_zone,
                             levels = rev(names(breaks)))
 
-  report <- as.data.frame(rev(table(world$map$biome)))
+  report <- as.data.frame(rev(table(world$map$temperature_zone)))
   colnames(report) <- c("type", "n_tiles")
   report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
 
