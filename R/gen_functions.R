@@ -8,7 +8,7 @@
 #' 
 #' @export
 #' 
-gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
+gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(0.2, 1),
                        dist_method = c("square", "manhattan")) {
 
   dist_method <- match.arg(dist_method)
@@ -19,7 +19,7 @@ gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
                        force_x = runif(n = n_plates, -1, 1),
                        force_y = runif(n = n_plates, -1, 1),
                        gravity = runif(n = n_plates, gravity_range[1],
-                                       gravity_range[2]),
+                                       gravity_range[2])^2,
                        base_height = runif(n = n_plates, 1, 100))
 
   plates$force_scaled_x <- plates$centre_x + plates$force_x * (map_x/5)
@@ -28,8 +28,8 @@ gen_plates <- function(n_plates, map_x, map_y = map_x, gravity_range = c(1, 1),
   map <- expand.grid(x = 1:map_x, y = 1:map_y)
 
   map$plate <- apply(map, 1, function(r) {
-    x_dists <- abs(wrapped_distance(r["x"], plates$centre_x, map_x)) / plates$gravity
-    y_dists <- abs(wrapped_distance(r["y"], plates$centre_y, map_y)) / plates$gravity
+    x_dists <- abs(wrapped_distance(r["x"], plates$centre_x, map_x))^2 / plates$gravity
+    y_dists <- abs(wrapped_distance(r["y"], plates$centre_y, map_y))^2 / plates$gravity
     if (dist_method == "manhattan") {
       output <- which.min(x_dists + y_dists)
     } else {
