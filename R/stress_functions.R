@@ -13,7 +13,7 @@ calc_stress <- function(world, spread = 5) {
   map_y <- max(world$map$y)
   pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
   counter <- 0
-  world$map$stress <- apply(world$map, 1, function(r) {
+  new_stress <- apply(world$map, 1, function(r) {
     counter <<- counter + 1
     setTxtProgressBar(pb, counter)
     # determine the range of nearby cells
@@ -42,6 +42,9 @@ calc_stress <- function(world, spread = 5) {
     }
   })
   close(pb)
+  # plates already have a base level. This adds to that
+  # base level.
+  world$map$stress <- world$map$stress + new_stress
   return(world)
 }
 
