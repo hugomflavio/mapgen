@@ -53,7 +53,16 @@ plot_contours <- function(world, colour = "brown") {
                                               z = aux),
                                  breaks = breaks,
                                  colour = colour)
-  p <- p + scale_x_continuous(expand = c(0, 0))
-  p <- p + scale_y_continuous(expand = c(0, 0))
+  p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+  p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
+  return(p)
+}
+
+plot_land <- function(world, fill = c("white", "grey")) {
+  p <- ggplot2::ggplot(data = world$map)
+  p <- p + ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = land))
+  p <- p + ggplot2::scale_fill_manual(values = fill)
+  p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+  p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
   return(p)
 }

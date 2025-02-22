@@ -9,8 +9,7 @@ world <- gen_world(n_plates = c(30, 50), spread = c(3, 2),
                    height_range = c(-10, 10),
                    dist_method = "square")
 
-plot_plates(world) + guides(fill = "none")
-
+# plot_plates(world) + guides(fill = "none")
 
 world <- classify_heights(world, breaks = c("deep_water" = 0,
                                             "water" = 0.50,
@@ -26,28 +25,14 @@ plot_topography(world, fill = c("deep_water" = "#3d74f5",
                                 "high" = "#8ad184",
                                 "peaks" = "#ced6ce"))
 
-plot_contours(world)
+# plot_contours(world)
 
+# plot_land(world)
 
+world <- find_isolated(world)
+world <- remove_isolated(world, type = "land")
 
-
-
-
-
-world$map$land <- factor(world$map$topography, levels = rev(levels(world$map$topography)))
-world$map$land <- as.numeric(world$map$land) - 1
-world$map$land[world$map$land < 0] <- 0
-
-world$map$land <- 0
-world$map$land[!(world$map$topography %in% c("deep_water", "water"))] <- 1
-
-
-p_world <- ggplot(data = world$map)
-p_world <- p_world + geom_tile(aes(x = x, y = y, fill = topography))
-p_world <- p_world + scale_fill_manual(values = map_colours)
-p_world
-
-
+plot_land(world)
 
 
 
