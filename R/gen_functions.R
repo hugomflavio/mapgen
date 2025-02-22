@@ -121,3 +121,114 @@ gen_world <- function(n_plates, spread, weight = 1, noise = 50,
 
   return(final_world)
 }
+
+
+# Main temperature function
+gen_temperature <- function(world,
+                        pole_locs, pole_radius = 20,
+                        pole_power = 2,
+                        hotspot_locs = list(c(1, 1)), hotspot_radius = 5,
+                        hotspot_power = 0.2,
+                        min_land_effect = 0,
+                        max_land_effect = 15,
+                        min_water_effect = 3,
+                        max_water_effect = 5) {
+
+  map_x <- max(world$map$x)
+  map_y <- max(world$map$y)
+
+  if (missing("pole_locs")) {
+    pole_locs <- list(c(map_x/2, map_y+0.5))
+  }
+
+  pole_radius <- rep(pole_radius, length.out = length(pole_locs))
+  hotspot_radius <- rep(hotspot_radius, length.out = length(hotspot_locs))
+
+  pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
+  counter <- 0
+  world$map$temperature_base <- apply(world$map, 1, function(r) {
+    counter <<- counter + 1
+    setTxtProgressBar(pb, counter)
+    # Calculate the distance to the pole
+    dist_to_pole <- sapply(pole_locs, function(pole) {
+      x_dists <- abs(wrapped_distance(as.numeric(r["x"]), pole[1], map_x))
+      y_dists <- abs(wrapped_distance(as.numeric(r["y"]), pole[2], map_y))
+      output <- sqrt(x_dists^2 + y_dists^2)
+      return(output)
+    })
+    # Find the minimum distance to the hotspot
+    this_pole <- which.min(dist_to_pole)
+
+    # Calculate the temperature based on distance to the pole
+    if (dist_to_pole > pole_radius) {
+      pole_minus_r <- dist_to_pole[this_pole] - pole_radius[this_pole]
+      pole_plus_r <- dist_to_pole[this_pole] + pole_radius[this_pole]
+      scaled_temp <- ((pole_minus_r) / (pole_plus_r)) ^ pole_power
+    } else {
+      scaled_temp <- 0
+    }
+
+    # Calculate distances to all hotspot locations
+    dist_to_hot <- sapply(hotspot_locs, function(hot) {
+      x_dists <- abs(wrapped_distance(as.numeric(r["x"]), hot[1], map_x))
+      y_dists <- abs(wrapped_distance(as.numeric(r["y"]), hot[2], map_y))
+      output <- sqrt(x_dists^2 + y_dists^2)
+      return(output)
+    })
+    # Find the minimum distance to the hotspot
+    this_hot <- which.min(dist_to_hot)
+
+    # Calculate the hotspot modifier
+    hot_minus_r <- dist_to_hot[this_hot] - hotspot_radius[this_hot]
+    hot_plus_r <- dist_to_hot[this_hot] + hotspot_radius[this_hot]
+    hot_modifier <- hot_minus_r / (hot_plus_r * 2)
+
+    # Adjust temperature by the hotspot modifier
+    scaled_temp <- scaled_temp - hot_modifier * hotspot_power
+
+    if (scaled_temp < 0) {
+      scaled_temp <- 0
+    }
+
+    return(scaled_temp)
+  })
+  close(pb)
+
+  # make temperature ranges more realistic
+  max_temp <- max(world$map$temperature_base)
+  world$map$temperature_base <- world$map$temperature_base / max_temp
+  world$map$temperature_base <- (world$map$temperature_base - 0.5) * 100
+
+  # incorporate terrain effects
+  world$map$temperature_real <- world$map$temperature_base
+
+  scaled_stress <- world$map$stress / max(world$map$stress)
+
+  land_effect <- sapply(scaled_stress, function(i) {
+    max(min_land_effect, max_land_effect * i)
+  })
+  water_effect <- sapply(scaled_stress, function(i) {
+    max(min_water_effect, max_water_effect * i)
+  })
+  world$map$temperature_real[world$map$land] <-
+    world$map$temperature_real[world$map$land] - land_effect[world$map$land]
+
+  # water has a smaller impact on temperature
+  world$map$temperature_real[!world$map$land] <-
+    world$map$temperature_real[!world$map$land] - water_effect[!world$map$land]
+
+  return(world)
+}
+
+gen_hotspot_locs <- function(world, n = 3) {
+  map_x <- max(world$map$x)
+  map_y <- max(world$map$y)
+
+  hotspot_x <- rnorm(n, mean = 0, sd = 0.4) * map_x
+  hotspot_y <- rnorm(n, mean = 0.5, sd = 0.15) * map_y
+  output <- lapply(1:n, function(i) {
+    c(hotspot_x[i], hotspot_y[i])
+  })
+
+  return(output)
+}
