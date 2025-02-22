@@ -35,7 +35,7 @@ classify_heights <- function(world, breaks) {
     message()
 
   world$map$land <- TRUE
-  world$map$land[grepl("water", world$topography)] <- FALSE
+  world$map$land[grepl("water", world$map$topography)] <- FALSE
 
   return(world)
 }
