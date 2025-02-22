@@ -3,52 +3,30 @@ devtools::load_all()
 library("ggplot2")
 
 set.seed(1)
-world <- gen_world(n_plates = c(30), spread = c(5),
-                   weight = 0.2,
+world <- gen_world(n_plates = c(30, 50), spread = c(3, 2),
                    map_x = 120, map_y = 120,
-                   gravity_range = c(0, 1),
+                   gravity_range = c(0.4, 1),
+                   height_range = c(-10, 10),
                    dist_method = "square")
 
-p_plates <- ggplot(data = world$map)
-p_plates <- p_plates + geom_tile(aes(x = x, y = y, fill = as.factor(plate)))
-p_plates <- p_plates + geom_point(data = world$plates, aes(x = centre_x, y = centre_y))
-p_plates <- p_plates + geom_text(data = world$plates, aes(x = centre_x, y = centre_y, label = round(gravity, 3)),
-                                 position = position_nudge(x = 0, y = 2))
-# p_plates <- p_plates + geom_line(data = world$vectors, aes(x = x, y = y, group = id))
-p_plates <- p_plates + guides(fill = "none")
-p_plates
-
-
-
-
-
-
+plot_plates(world) + guides(fill = "none")
 
 
 world <- classify_heights(world, breaks = c("deep_water" = 0,
-                                            "water" = 0.55,
+                                            "water" = 0.50,
                                             "low" = 0.7,
                                             "med" = 0.8,
                                             "high" = 0.9,
                                             "peaks" = 0.98))
 
-map_colours <- c("deep_water" = "#3d74f5",
-                 "water" = "#27cff5",
-                 "low" = "#65f0a8",
-                 "med" = "#33e622",
-                 "high" = "#8ad184",
-                 "peaks" = "#ced6ce")
+plot_topography(world, fill = c("deep_water" = "#3d74f5",
+                                "water" = "#27cff5",
+                                "low" = "#65f0a8",
+                                "med" = "#33e622",
+                                "high" = "#8ad184",
+                                "peaks" = "#ced6ce"))
 
-p_stress_final <- ggplot(data = world$map)
-p_stress_final <- p_stress_final + geom_tile(aes(x = x, y = y, fill = stress))
-
-p_world <- ggplot(data = world$map)
-p_world <- p_world + geom_tile(aes(x = x, y = y, fill = topography))
-p_world <- p_world + scale_fill_manual(values = map_colours)
-
-p_stress_final + p_world
-
-
+plot_contours(world)
 
 
 
@@ -66,7 +44,6 @@ world$map$land[!(world$map$topography %in% c("deep_water", "water"))] <- 1
 
 p_world <- ggplot(data = world$map)
 p_world <- p_world + geom_tile(aes(x = x, y = y, fill = topography))
-p_world <- p_world + geom_contour(aes(x = x, y = y, z = stress))
 p_world <- p_world + scale_fill_manual(values = map_colours)
 p_world
 
@@ -208,3 +185,9 @@ p_world
 
 
 
+aux <- 1:nrow(world$plates)
+p_temp <- ggplot(data = world$map)
+p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = plate), breaks = aux)
+p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = land), breaks = 1:5)
+p_temp <- p_temp + geom_tile(aes(x = x, y = y, fill = biome), alpha = 0.7)
+p_temp + scale_fill_brewer(palette = "RdYlBu")
