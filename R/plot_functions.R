@@ -26,7 +26,11 @@ plot_stress <- function(world) {
   return(p)
 }
 
-plot_topography <- function(world, fill) {
+plot_topography <- function(world) {
+
+  fill <- world$topography$fill
+  names(fill) <- world$topography$id
+
   if (is.null(world$map$topography)) {
     stop("This world has no topography yet.", call. = FALSE)
   }
