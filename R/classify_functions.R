@@ -34,7 +34,7 @@ classify_heights <- function(world, breaks) {
   report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
 
   # printing
-  report <- capture.output(print(topn = nrow(report)))
+  report <- capture.output(print(report, topn = nrow(report)))
   report <- sub("^\\d", " ", report)
   report <- paste0(report, collapse = "\n")
   message("Tile totals:\n", report)
@@ -70,7 +70,7 @@ classify_temps <- function(world, breaks) {
   report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
 
   # printing
-  report <- capture.output(print(topn = nrow(report)))
+  report <- capture.output(print(report, topn = nrow(report)))
   report <- sub("^\\d", " ", report)
   report <- paste0(report, collapse = "\n")
   message("Tile totals:\n", report)
