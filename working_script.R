@@ -2,8 +2,9 @@
 devtools::load_all()
 library("ggplot2")
 
+set.seed(1)
 world <- gen_world(n_plates = c(20, 20, 50), spread = c(2, 10, 5),
-                   weight = 0.5, seed = 1,
+                   weight = 0.5,
                    map_x = 120, map_y = 120,
                    gravity_range = c(0.2, 1),
                    height_range = c(-5, 5),
@@ -84,6 +85,24 @@ world$map$terrain[world$map$topography == "water"] <- "water"
 
 plot_topography(world) + p
 
+world <- gen_temperature(world,
+                        pole_locs = list(c(60.5, 0)),
+                        pole_radius = 5,
+                        pole_power = 1,
+                        #hotspot_locs = gen_hotspot_locs(world, 10),
+                        hotspot_radius = 2,
+                        hotspot_power = 0.2,
+                        noise = data.frame(
+                            frequency = 0.5,
+                            amplitude = 0.1
+                        ),
+                        min_land_effect = 0,
+                        max_land_effect = 20,
+                        min_water_effect = 3,
+                        max_water_effect = 5)
+
+plot_temperature(world)
+
 world <- classify_temps(world, breaks = c("polar" = -999,
                                           "very_cold" = -35,
                                           "cold" = -15,
@@ -96,32 +115,6 @@ p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = height))
 p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = as.numeric(land)), breaks = 1, linewidth = 1.5)
 p_temp <- p_temp + geom_tile(aes(x = x, y = y, fill = temperature_zone), alpha = 0.7)
 p_temp + scale_fill_brewer(palette = "RdYlBu")
-
-world <- gen_temperature(world,
-                        pole_locs = list(c(60.5, 0)),
-                        pole_radius = 5,
-                        pole_power = 1,
-                        #hotspot_locs = gen_hotspot_locs(world, 10),
-                        hotspot_radius = 2,
-                        hotspot_power = 0.2,
-                        noise = data.frame(
-                            frequency = 0.1,
-                            amplitude = 0.1
-                        ),
-                        min_land_effect = 0,
-                        max_land_effect = 20,
-                        min_water_effect = 3,
-                        max_water_effect = 5)
-
-plot_temperature(world)
-
-p_temp <- ggplot(data = world$map)
-p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = height))
-p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = as.numeric(land)), breaks = 1, linewidth = 1.5)
-p_temp <- p_temp + geom_tile(aes(x = x, y = y, fill = temperature_zone), alpha = 0.7)
-p_temp + scale_fill_brewer(palette = "RdYlBu")
-
-
 
 # p_stress1 <- ggplot(data = world1$map)
 # p_stress1 <- p_stress1 + geom_tile(aes(x = x, y = y, fill = stress))
@@ -136,6 +129,4 @@ p_temp + scale_fill_brewer(palette = "RdYlBu")
 # p_stress2 <- p_stress2 + guides(fill = "none")
 
 # (p_plates1 + p_plates2) / (p_stress1 + p_stress2)
-
-
 

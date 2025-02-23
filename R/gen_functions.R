@@ -84,11 +84,10 @@ gen_plates <- function(n_plates, map_x, map_y = map_x,
 #' @export
 #' 
 gen_world <- function(n_plates, spread, weight = 1, noise = 50,
-                      map_x, map_y = map_x, seed = sample(0:(2^31 - 1), 1),
+                      map_x, map_y = map_x,
                       gravity_range = c(0.2, 1),
                       height_range = c(-10, 10),
                       dist_method = c("square", "manhattan")) {
-  set.seed(seed)
   dist_method <- match.arg(dist_method)
 
   # make the worlds
@@ -103,7 +102,6 @@ gen_world <- function(n_plates, spread, weight = 1, noise = 50,
 
   # use the first world as the reference
   final_world <- recipient[[1]]
-  final_world$seed <- seed
 
   # merge any other worlds to the first one
   if (length(n_plates) > 1) {
@@ -131,7 +129,6 @@ gen_temperature <- function(world,
                         hotspot_locs = list(c(1, 1)), hotspot_radius = 5,
                         hotspot_power = 0.2,
                         noise = NULL,
-                        seed = world$seed,
                         min_land_effect = 0,
                         max_land_effect = 15,
                         min_water_effect = 3,
@@ -190,10 +187,9 @@ gen_temperature <- function(world,
     if (is.null(noise)) {
       heat_noise <- 0
     } else {
-      heat_noise <- noise$amplitude * gen_simplex(
+      heat_noise <- noise$amplitude * ambient::gen_simplex(
         x = as.numeric(r["x"]) * noise$frequency,
-        y = as.numeric(r["y"]) * noise$frequency,
-        seed = seed
+        y = as.numeric(r["y"]) * noise$frequency
       )
     }
 
