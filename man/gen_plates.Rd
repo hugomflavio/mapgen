@@ -4,7 +4,14 @@
 \alias{gen_plates}
 \title{Generate tectonic plates}
 \usage{
-gen_plates(n_plates, map_x, map_y = map_x)
+gen_plates(
+  n_plates,
+  map_x,
+  map_y = map_x,
+  gravity_range = c(0.2, 1),
+  height_range = c(-10, 10),
+  dist_method = c("square", "manhattan")
+)
 }
 \arguments{
 \item{n_plates}{number of plates on the map}
