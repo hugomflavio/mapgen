@@ -33,14 +33,11 @@ classify_heights <- function(world, breaks) {
   colnames(report) <- c("type", "n_tiles")
   report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
 
-  message("Tile totals:")
-  report |>
-    print(topn = nrow(report)) |>
-    capture.output() |>
-    sub("^\\d", " ", x = _) |>
-    paste0(collapse = "\n") |>
-    message()
-
+  # printing
+  report <- capture.output(print(topn = nrow(report)))
+  report <- sub("^\\d", " ", report)
+  report <- paste0(report, collapse = "\n")
+  message("Tile totals:\n", report)
 
   return(world)
 }
@@ -72,13 +69,11 @@ classify_temps <- function(world, breaks) {
   colnames(report) <- c("type", "n_tiles")
   report$pct <- round(report$n_tiles / sum(report$n_tiles) * 100, 2)
 
-  message("Tile totals:")
-  report |>
-    print(topn = nrow(report)) |>
-    capture.output() |>
-    sub("^\\d", " ", x = _) |>
-    paste0(collapse = "\n") |>
-    message()
+  # printing
+  report <- capture.output(print(topn = nrow(report)))
+  report <- sub("^\\d", " ", report)
+  report <- paste0(report, collapse = "\n")
+  message("Tile totals:\n", report)
 
   return(world)
 }
