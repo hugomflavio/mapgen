@@ -88,7 +88,6 @@ gen_world <- function(n_plates, spread, weight = 1, noise = 50,
                       gravity_range = c(0.2, 1),
                       height_range = c(-10, 10),
                       dist_method = c("square", "manhattan")) {
-
   dist_method <- match.arg(dist_method)
 
   # make the worlds
@@ -129,6 +128,7 @@ gen_temperature <- function(world,
                         pole_power = 2,
                         hotspot_locs = list(c(1, 1)), hotspot_radius = 5,
                         hotspot_power = 0.2,
+                        noise = NULL,
                         min_land_effect = 0,
                         max_land_effect = 15,
                         min_water_effect = 3,
@@ -183,8 +183,18 @@ gen_temperature <- function(world,
     hot_plus_r <- dist_to_hot[this_hot] + hotspot_radius[this_hot]
     hot_modifier <- hot_minus_r / (hot_plus_r * 2)
 
+    # Calculate the noise
+    if (is.null(noise)) {
+      heat_noise <- 0
+    } else {
+      heat_noise <- noise$amplitude * ambient::gen_simplex(
+        x = as.numeric(r["x"]) * noise$frequency,
+        y = as.numeric(r["y"]) * noise$frequency
+      )
+    }
+
     # Adjust temperature by the hotspot modifier
-    scaled_temp <- scaled_temp - hot_modifier * hotspot_power
+    scaled_temp <- scaled_temp - hot_modifier * hotspot_power + heat_noise
 
     if (scaled_temp < 0) {
       scaled_temp <- 0
