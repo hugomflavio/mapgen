@@ -97,8 +97,14 @@ gen_world <- function(n_plates, stress, smooth,
                         gravity_range = gravity_range,
                         height_range = height_range[i],
                         dist_method = dist_method)
-    world <- calc_stress(world, spread = spread[i])
-    world <- scale_stress(world)
+    if (smooth[i] != 0) {
+      world <- smoothen(world, spread = smooth[i])
+    }
+    if (stress[i] != 0) {
+      world <- calc_stress(world, spread = stress[i])
+      world <- scale_stress(world)
+    }
+    return(world)
   })
 
   # use the first world as the reference
