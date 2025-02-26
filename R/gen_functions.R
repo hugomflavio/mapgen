@@ -10,7 +10,7 @@
 #' 
 gen_plates <- function(n_plates, map_x, map_y = map_x,
                        gravity_range = c(0.2, 1),
-                       height_range = c(-10, 10),
+                       height_range = 10,
                        dist_method = c("square", "manhattan")) {
 
   dist_method <- match.arg(dist_method)
@@ -24,8 +24,8 @@ gen_plates <- function(n_plates, map_x, map_y = map_x,
                                        gravity_range[1],
                                        gravity_range[2])^2,
                        base_height = runif(n = n_plates,
-                                           height_range[1],
-                                           height_range[2]))
+                                           -height_range,
+                                           height_range))
 
   plates$force_scaled_x <- plates$centre_x + plates$force_x * (map_x/5)
   plates$force_scaled_y <- plates$centre_y + plates$force_y * (map_y/5)
@@ -83,10 +83,11 @@ gen_plates <- function(n_plates, map_x, map_y = map_x,
 #' 
 #' @export
 #' 
-gen_world <- function(n_plates, spread, weight = 1, noise = 50,
+gen_world <- function(n_plates, stress, smooth,
+                      weight = 1, noise = 50,
                       map_x, map_y = map_x,
                       gravity_range = c(0.2, 1),
-                      height_range = c(-10, 10),
+                      height_range = 10,
                       dist_method = c("square", "manhattan")) {
   dist_method <- match.arg(dist_method)
 
@@ -94,7 +95,7 @@ gen_world <- function(n_plates, spread, weight = 1, noise = 50,
   recipient <- lapply(1:length(n_plates), function(i) {
     world <- gen_plates(n_plates[i], map_x = map_x, map_y = map_y,
                         gravity_range = gravity_range,
-                        height_range = height_range,
+                        height_range = height_range[i],
                         dist_method = dist_method)
     world <- calc_stress(world, spread = spread[i])
     world <- scale_stress(world)
