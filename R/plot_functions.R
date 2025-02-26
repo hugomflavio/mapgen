@@ -23,6 +23,8 @@ plot_plates <- function(world, points = TRUE, gravity = TRUE, vectors = TRUE) {
 plot_stress <- function(world) {
   p <- ggplot2::ggplot(data = world$map)
   p <- p + ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = stress))
+  p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+  p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
   return(p)
 }
 
