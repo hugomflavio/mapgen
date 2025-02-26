@@ -47,9 +47,6 @@ world <- classify_heights(world, topography = topography)
 world <- assign_vertical_terrain(world)
 unique(world$map$terrain)
 
-world$map$terrain[world$map$topography == "deep_water"] <- "deep_water"
-world$map$terrain[world$map$topography == "water"] <- "water"
-
 world <- calc_slope(world)
 p <- ggplot2::ggplot(data = world$map)
 p <- p + geom_tile(aes(x = x, y = y, fill = slope))
@@ -57,8 +54,29 @@ p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
 p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
 p
 
-plot_stress(world) + p
-plot_stress(world) + plot_topography(world)
+world <- assign_bodies(world)
+
+p <- plot_land(world)
+p <- p + geom_text(data = bodies,
+                   aes(x = x, y = y, label = body))
+p
+
+world <- assign_water_terrain(world, 200)
+
+plot_terrain(world)
+
+world <- classify_coasts(world)
+world <- gen_springs(world)
+
+p <- plot_land(world)
+p <- p + geom_tile(data = world$map[world$map$spring, ],
+                   aes(x = x, y = y), colour = "blue")
+p
+
+
+
+
+
 
 world <- gen_temperature(world,
                         pole_locs = list(c(60.5, 0)),
@@ -91,3 +109,18 @@ p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = as.numeric(land)), breaks 
 p_temp <- p_temp + geom_tile(aes(x = x, y = y, fill = temperature_zone), alpha = 0.7)
 p_temp + scale_fill_brewer(palette = "RdYlBu")
 
+
+
+
+
+
+
+
+
+p <- ggplot2::ggplot(data = world$map)
+p <- p + ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = as.factor(body)))
+p <- p + geom_text(data = bodies,
+                   aes(x = x, y = y, label = body))
+p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
+p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
+p

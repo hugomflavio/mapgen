@@ -249,3 +249,13 @@ gen_hotspot_locs <- function(world, n = 3) {
 
   return(output)
 }
+
+
+gen_springs <- function(world, basin_size = 50) {
+  candidates <- world$map$land & !world$map$coastal
+  springs <- ceiling(sum(candidates) / basin_size)
+  these <- sample(which(candidates), springs, replace = FALSE)
+  world$map$spring <- FALSE
+  world$map$spring[these] <- TRUE
+  return(world)
+}

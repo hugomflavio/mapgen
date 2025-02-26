@@ -1,3 +1,71 @@
+assign_bodies <- function(world) {
+  map_x <- max(world$map$x) 
+  map_y <- max(world$map$y)
+  pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
+  land_counter <- 0
+  water_counter <- 0
+  world$map$body <- NA
+  for (i in 1:nrow(world$map)) {
+  # for (i in 1) {
+    setTxtProgressBar(pb, i)
+    # determine the range of nearby cells
+    range_x <- wrapped_range(world$map$x[i], 1, map_x)
+    range_y <- wrapped_range(world$map$y[i], 1, map_y)
+
+    # pick the cells that match the x and y parameters
+    rows_x <- world$map$x %in% range_x
+    rows_y <- world$map$y %in% range_y
+    neighbours <- world$map[rows_x & rows_y, ]
+    # look only at cells that are of the same land type
+    neighbours <- neighbours[neighbours$land == world$map$land[i], ]
+    # if any already has a number, we're in the same
+    if (any(!is.na(neighbours$body))) {
+      touched <- unique(neighbours$body)
+      touched <- touched[!is.na(touched)]
+      if (world$map$land[i]) {
+        keep <- min(touched)
+      } else {
+        keep <- max(touched)
+      }
+      if (length(touched) > 1) {
+        for (j in touched[touched != keep]) {
+          link <- na_as_false(world$map$body == j)
+          world$map$body[link] <- keep
+        }
+      }
+      world$map$body[i] <- keep
+    # otherwise, assign a new number
+    } else {
+      if (world$map$land[i]) {
+        land_counter <- land_counter + 1
+        world$map$body[i] <- land_counter
+      } else {
+        water_counter <- water_counter - 1
+        world$map$body[i] <- water_counter
+      }
+    }
+  }
+  close(pb)
+
+  bodies <- aggregate(world$map$body,
+                      list(body = world$map$body),
+                      length)
+  colnames(bodies)[2] <- "n_tiles"
+  bodies$x <- aggregate(world$map$x,
+                        list(body = world$map$body),
+                        median)$x
+  bodies$y <- aggregate(world$map$y,
+                        list(body = world$map$body),
+                        median)$x
+  bodies$land <- aggregate(world$map$land,
+                        list(body = world$map$body),
+                        all)$x
+
+  world$bodies <- bodies
+
+  return(world)
+}
+
 assign_vertical_terrain <- function(world) {
   if (is.null(world$topography)) {
     stop("No topography information found. Aborting.", call. = FALSE)
@@ -26,5 +94,15 @@ assign_vertical_terrain <- function(world) {
     }
   }
 
+  return(world)
+}
+
+assign_water_terrain <- function(world, lake_threshold = 50) {
+  world$map$terrain[world$map$topography == "deep_water"] <- "deep ocean"
+  world$map$terrain[world$map$topography == "water"] <- "ocean"
+  small <- world$bodies$n_tiles <= lake_threshold
+  waterbodies <- !(world$bodies$land)
+  lakes <- world$bodies$body[small & waterbodies]
+  world$map$terrain[world$map$body %in% lakes] <- "lake"
   return(world)
 }

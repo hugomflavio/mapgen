@@ -1,3 +1,18 @@
+#' Consider NA's as FALSE
+#'
+#' Aimed to be used in a vector of TRUE/FALSE's, where NA's are present and should be considered as false.
+#'
+#' @param input vector containing NA's.
+#'
+#' @return A logical vector.
+#'
+#' @keywords internal
+#'
+na_as_false <- function(input) {
+  input[is.na(input)] <- FALSE
+  return(input)
+}
+
 #' Scale stress values
 #' 
 #' \code{\link{calc_stress}} can generate different ranges of values for
