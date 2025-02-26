@@ -3,13 +3,17 @@ devtools::load_all()
 library("ggplot2")
 
 set.seed(1)
-world <- gen_world(n_plates = c(20, 20, 50), spread = c(2, 10, 5),
-                   weight = 0.5,
+world <- gen_world(n_plates = c(10),
+                   smooth = c(3),
+                   stress = c(0),
+                   height_range = c(20),
+                   weight = 0.2,
                    map_x = 120, map_y = 120,
                    gravity_range = c(0.2, 1),
-                   height_range = c(-5, 5),
-                   dist_method = "square")
+                   dist_method = "square",
+                   noise = 0)
 
+plot_stress(world)
 # plot_plates(world) + guides(fill = "none")
 
 topography <- data.frame(id = c("deep_water",
@@ -77,13 +81,45 @@ unique(world$map$terrain)
 world$map$terrain[world$map$topography == "deep_water"] <- "deep_water"
 world$map$terrain[world$map$topography == "water"] <- "water"
 
+calc_slope <- function(world) {
+  map_x <- max(world$map$x) 
+  map_y <- max(world$map$y)
+  pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
+  counter <- 0
+  world$map$slope <- apply(world$map, 1, function(r) {
+    counter <<- counter + 1
+    setTxtProgressBar(pb, counter)
+    # determine the range of nearby cells
+    range_x <- wrapped_range(as.numeric(r["x"]), 1, map_x)
+    range_y <- wrapped_range(as.numeric(r["y"]), 1, map_y)
+
+    # pick the cells that match the x and y parameters
+    rows_x <- world$map$x %in% range_x
+    rows_y <- world$map$y %in% range_y
+    neighbours <- world$map[rows_x & rows_y, ]
+
+    slope <- max(neighbours$stress) - min(neighbours$stress)
+    return(slope)
+  })
+  close(pb)
+  return(world)
+}
 
   p <- ggplot2::ggplot(data = world$map)
-  p <- p + geom_tile(aes(x = x, y = y, fill = terrain))
+  p <- p + geom_tile(aes(x = x, y = y, fill = slope))
   p <- p + ggplot2::scale_x_continuous(expand = c(0, 0))
   p <- p + ggplot2::scale_y_continuous(expand = c(0, 0))
+  p
 
-plot_topography(world) + p
+plot_stress(world) + p
+plot_stress(world) + plot_topography(world)
+
+p_temp <- ggplot(data = world$map)
+p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = height))
+p_temp <- p_temp + geom_contour(aes(x = x, y = y, z = as.numeric(land)), breaks = 1, linewidth = 1.5)
+p_temp <- p_temp + geom_tile(aes(x = x, y = y, fill = temperature_zone), alpha = 0.7)
+p_temp + scale_fill_brewer(palette = "RdYlBu")
+
 
 world <- gen_temperature(world,
                         pole_locs = list(c(60.5, 0)),
