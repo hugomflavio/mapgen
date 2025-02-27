@@ -143,8 +143,11 @@ gen_temperature <- function(world,
 
   map_x <- max(world$map$x)
   map_y <- max(world$map$y)
-  seed <- ifelse(is.null(noise) || is.null(noise$seed), 
-                 sample.int((2^31 - 1), 1), noise$seed)
+  if (is.null(noise) || is.null(noise$seed)) {
+    seed <- sample.int((2^31 - 1), 1)
+  } else {
+    seed <- noise$seed
+  }
 
   if (missing("pole_locs")) {
     pole_locs <- list(c(map_x/2, map_y+0.5))
