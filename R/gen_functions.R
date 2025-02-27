@@ -257,11 +257,37 @@ gen_hotspot_locs <- function(world, n = 3) {
 }
 
 
-gen_springs <- function(world, basin_size = 50) {
-  candidates <- world$map$land & !world$map$coastal
-  springs <- ceiling(sum(candidates) / basin_size)
-  these <- sample(which(candidates), springs, replace = FALSE)
+gen_springs <- function(world, basin_size = 50,
+                        min_island = ceiling(basin_size/2)) {
+  candidates <- world$bodies$land & world$bodies$n_tiles >= min_island
+  world$bodies$springs <- 0
+  world$bodies$springs[candidates] <- 
+    ceiling(world$bodies$n_tiles[candidates] / basin_size)
+
   world$map$spring <- FALSE
-  world$map$spring[these] <- TRUE
+
+  for (i in which(candidates)) {
+    on_body <- world$map$body == world$bodies$body[i]
+    not_coastal <- !world$map$coastal
+    tiles <- which(on_body & not_coastal)
+
+    if (length(tiles) > 1) {
+      these <- NULL
+      for (j in 1:world$bodies$springs[i]) {
+        these[j] <- sample(tiles, 1,
+                           prob = world$map$height[tiles])
+        # remove tiles adjacent to new spring from the pool
+        x_out <- world$map$x[tiles] %in% (world$map$x[these[j]] + (-1:1))
+        y_out <- world$map$y[tiles] %in% (world$map$y[these[j]] + (-1:1))
+        tiles <- tiles[!(x_out & y_out)]
+        if (length(tiles) < 1) {
+          # reduce number of springs if not enough space
+          world$bodies$springs[i] <- length(these)
+          break()
+        }
+      }
+      world$map$spring[these] <- TRUE
+    }
+  }
   return(world)
 }
