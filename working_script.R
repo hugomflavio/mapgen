@@ -2,7 +2,9 @@
 devtools::load_all()
 library("ggplot2")
 
-set.seed(1)
+world_seed <- 1
+
+set.seed(world_seed)
 world <- gen_world(n_plates = c(20, 50),
                    smooth = c(1, 1),
                    stress = c(2, 5),
@@ -57,7 +59,7 @@ p
 world <- assign_bodies(world)
 
 p <- plot_land(world)
-p <- p + geom_text(data = bodies,
+p <- p + geom_text(data = world$bodies,
                    aes(x = x, y = y, label = body))
 p
 
@@ -74,10 +76,7 @@ p <- p + geom_tile(data = world$map[world$map$spring, ],
 p
 
 
-
-
-
-
+set.seed(world_seed)
 world <- gen_temperature(world,
                         pole_locs = list(c(60.5, 0)),
                         pole_radius = 5,

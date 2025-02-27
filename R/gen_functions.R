@@ -143,6 +143,11 @@ gen_temperature <- function(world,
 
   map_x <- max(world$map$x)
   map_y <- max(world$map$y)
+  if (is.null(noise) || is.null(noise$seed)) {
+    seed <- sample.int((2^31 - 1), 1)
+  } else {
+    seed <- noise$seed
+  }
 
   if (missing("pole_locs")) {
     pole_locs <- list(c(map_x/2, map_y+0.5))
@@ -196,7 +201,8 @@ gen_temperature <- function(world,
     } else {
       heat_noise <- noise$amplitude * ambient::gen_simplex(
         x = as.numeric(r["x"]) * noise$frequency,
-        y = as.numeric(r["y"]) * noise$frequency
+        y = as.numeric(r["y"]) * noise$frequency,
+        seed = seed
       )
     }
 
