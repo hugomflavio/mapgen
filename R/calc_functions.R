@@ -53,21 +53,38 @@ calc_slope <- function(world) {
   map_y <- max(world$map$y)
   pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
   counter <- 0
-  world$map$slope <- apply(world$map, 1, function(r) {
+  recipient <- lapply(1:nrow(world$map), function(i) {
     counter <<- counter + 1
     setTxtProgressBar(pb, counter)
     # determine the range of nearby cells
-    range_x <- wrapped_range(as.numeric(r["x"]), 1, map_x)
-    range_y <- wrapped_range(as.numeric(r["y"]), 1, map_y)
+    range_x <- wrapped_range(world$map$x[i], 1, map_x)
+    range_y <- wrapped_range(world$map$y[i], 1, map_y)
 
     # pick the cells that match the x and y parameters
     rows_x <- world$map$x %in% range_x
     rows_y <- world$map$y %in% range_y
     neighbours <- world$map[rows_x & rows_y, ]
+    rownames(neighbours) <- 1:9
+    link <- match(neighbours$x, range_x)
+    names(link) <- row.names(neighbours)
+    neighbours <- neighbours[names(sort(link)), ]
 
-    slope <- max(neighbours$stress) - min(neighbours$stress)
-    return(slope)
+    link <- match(neighbours$y, range_y)
+    names(link) <- row.names(neighbours)
+    neighbours <- neighbours[names(sort(link)), ]
+    rownames(neighbours) <- 1:9
+    # row order compared to tile structure:
+    # 7 8 9 
+    # 4 5 6
+    # 1 2 3
+    output <- data.frame(
+      slope = max(neighbours$stress) - min(neighbours$stress),
+      slope_dir = which.min(neighbours$stress))
+    return(output)
   })
   close(pb)
+  slopes <- do.call(rbind, recipient)
+  world$map$slope <- slopes$slope
+  world$map$slope_dir <- slopes$slope_dir
   return(world)
 }
