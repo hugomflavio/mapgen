@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 devtools::load_all()
 library("ggplot2")
-
+library("patchwork")
 world_seed <- 1
 
 set.seed(world_seed)
@@ -15,7 +15,7 @@ world <- gen_world(n_plates = c(20, 50),
                    dist_method = "square",
                    noise = 50)
 
-plot_stress(world)
+plot_plates(world) + plot_stress(world)
 # plot_plates(world) + guides(fill = "none")
 
 topography <- data.frame(id = c("deep_water",
@@ -43,6 +43,8 @@ topography <- data.frame(id = c("deep_water",
                        pct_mountains = c(0,0,0,2,5,20,90))
 
 world <- classify_heights(world, topography = topography)
+
+plot_topography(world)
 # world <- find_isolated(world)
 # world <- remove_isolated(world, type = "land")
 
@@ -70,11 +72,16 @@ plot_terrain(world)
 world <- classify_coasts(world)
 world <- gen_springs(world)
 
-p <- plot_land(world)
-p <- p + geom_tile(data = world$map[world$map$spring, ],
+
+world <- gen_rivers(world, river_angles = 8)
+
+i <- 1
+plot_ids(world, which(world$map$river_id == i), label = round(height, 1)) + labs(title = i); i <- i + 1
+
+p <- plot_topography(world)
+p <- p + geom_tile(data = world$map[world$map$river, ],
                    aes(x = x, y = y), colour = "blue")
 p
-
 
 set.seed(world_seed)
 world <- gen_temperature(world,

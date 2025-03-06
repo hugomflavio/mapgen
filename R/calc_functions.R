@@ -9,33 +9,30 @@
 #' @export
 #' 
 calc_stress <- function(world, spread = 5) {
-  map_x <- max(world$map$x) 
-  map_y <- max(world$map$y)
   pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
   counter <- 0
-  new_stress <- apply(world$map, 1, function(r) {
+  new_stress <- sapply(1:nrow(world$map), function(i) {
     counter <<- counter + 1
     setTxtProgressBar(pb, counter)
-    # determine the range of nearby cells
-    range_x <- wrapped_range(r["x"], spread, map_x)
-    range_y <- wrapped_range(r["y"], spread, map_y)
-
-    # pick the cells that match the x and y parameters
-    rows_x <- world$map$x %in% range_x
-    rows_y <- world$map$y %in% range_y
-    neighbours <- rows_x & rows_y
+    neighbours <- neighbour_ids(world, i, dist = spread)
+    neigh_vec <- rep(FALSE, nrow(world$map))
+    neigh_vec[neighbours] <- TRUE
     # if all neighbours belong to same plate, skip
     if (length(unique(world$map$plate[neighbours])) == 1) {
       return(0)
     # otherwise...
     } else {
-      not_r_plate <- neighbours & world$map$plate != r["plate"]
+      not_r_plate <- neigh_vec & world$map$plate != world$map$plate[i]
   
-      rel_x <- wrapped_distance(r["x"], world$map$x[not_r_plate], map_x)
-      rel_y <- wrapped_distance(r["y"], world$map$y[not_r_plate], map_y)
+      rel_x <- wrapped_distance(world$map$x[i],
+                                world$map$x[not_r_plate],
+                                world$map_x)
+      rel_y <- wrapped_distance(world$map$y[i],
+                                world$map$y[not_r_plate],
+                                world$map_y)
 
-      rel_force_x <- world$map$force_x[not_r_plate] - r["force_x"]
-      rel_force_y <- world$map$force_y[not_r_plate] - r["force_y"]
+      rel_force_x <- world$map$force_x[not_r_plate] - world$map$force_x[i]
+      rel_force_y <- world$map$force_y[not_r_plate] - world$map$force_y[i]
       force <- sqrt(rel_force_x^2 + rel_force_y^2)
       stress <- (rel_x * rel_force_x / force) + (rel_y * rel_force_y / force)
       return(-sum(stress))
@@ -48,27 +45,31 @@ calc_stress <- function(world, spread = 5) {
   return(world)
 }
 
-calc_slope <- function(world) {
-  map_x <- max(world$map$x) 
-  map_y <- max(world$map$y)
-  pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
+calc_slope <- function(world, these, show_progress = TRUE) {
+  if (missing(these)) {
+    these <- 1:nrow(world$map)
+  }
+  if (show_progress) {
+    pb <- txtProgressBar(min = 0, max = length(these), style = 3, width = 60)
+  }
   counter <- 0
-  recipient <- lapply(1:nrow(world$map), function(i) {
+  recipient <- lapply(these, function(i) {
     counter <<- counter + 1
-    setTxtProgressBar(pb, counter)
-    # determine the range of nearby cells
-    range_x <- wrapped_range(world$map$x[i], 1, map_x)
-    range_y <- wrapped_range(world$map$y[i], 1, map_y)
+    if (show_progress) {
+      setTxtProgressBar(pb, counter)
+    }
 
-    # pick the cells that match the x and y parameters
-    rows_x <- world$map$x %in% range_x
-    rows_y <- world$map$y %in% range_y
-    neighbours <- world$map[rows_x & rows_y, ]
+    # determine the range of nearby cells
+    link <- neighbour_ids(world, i)
+    neighbours <- world$map[link, ]
     rownames(neighbours) <- 1:9
+    
+    range_x <- wrapped_range(world$map$x[i], 1, world$map_x)
     link <- match(neighbours$x, range_x)
     names(link) <- row.names(neighbours)
     neighbours <- neighbours[names(sort(link)), ]
 
+    range_y <- wrapped_range(world$map$y[i], 1, world$map_y)
     link <- match(neighbours$y, range_y)
     names(link) <- row.names(neighbours)
     neighbours <- neighbours[names(sort(link)), ]
@@ -77,14 +78,31 @@ calc_slope <- function(world) {
     # 7 8 9 
     # 4 5 6
     # 1 2 3
+    slope_dir <- which(neighbours$stress == min(neighbours$stress))
+    # if two or more neighbouring tiles have exactly the same stress
+    if (length(slope_dir) > 1) {
+      # if any of them is towards itself, pick that one
+      if (any(slope_dir == 5)) {
+        slope_dir <- 5
+      }
+      # in the up/down/left/right direction, pick that one
+      if (any(slope_dir %in% c(2, 4, 6, 8))) {
+        slope_dir <- slope_dir[slope_dir %in% c(2, 4, 6, 8)][1]
+      # else just pick the first one
+      } else {
+        slope_dir <- slope_dir[1]
+      }
+    }
     output <- data.frame(
       slope = max(neighbours$stress) - min(neighbours$stress),
-      slope_dir = which.min(neighbours$stress))
+      slope_dir = slope_dir)
     return(output)
   })
-  close(pb)
+  if (show_progress) {
+    close(pb)
+  }
   slopes <- do.call(rbind, recipient)
-  world$map$slope <- slopes$slope
-  world$map$slope_dir <- slopes$slope_dir
+  world$map$slope[these] <- slopes$slope
+  world$map$slope_dir[these] <- slopes$slope_dir
   return(world)
 }

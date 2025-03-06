@@ -83,25 +83,17 @@ classify_temps <- function(world, breaks) {
 }
 
 classify_coasts <- function(world) {
-  map_x <- max(world$map$x) 
-  map_y <- max(world$map$y)
   pb <- txtProgressBar(min = 0, max = sum(world$map$land), style = 3, width = 60)
   counter <- 0
   world$map$coastal <- FALSE
   # grab only land tiles, find if there's a
   # water tile next to them.
   world$map$coastal[world$map$land] <- 
-    apply(world$map[world$map$land, ], 1, function(r) {
+    sapply(which(world$map$land), function(i) {
       counter <<- counter + 1
       setTxtProgressBar(pb, counter)
-      # determine the range of nearby cells
-      range_x <- wrapped_range(as.numeric(r["x"]), 1, map_x)
-      range_y <- wrapped_range(as.numeric(r["y"]), 1, map_y)
-
-      # pick the cells that match the x and y parameters
-      rows_x <- world$map$x %in% range_x
-      rows_y <- world$map$y %in% range_y
-      neighbours <- world$map[rows_x & rows_y, ]
+      link <- neighbour_ids(world, i)
+      neighbours <- world$map[link, ]
 
       coastal <- any(grepl("ocean", neighbours$terrain))
       return(coastal)

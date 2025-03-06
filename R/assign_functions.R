@@ -1,6 +1,4 @@
 assign_bodies <- function(world) {
-  map_x <- max(world$map$x) 
-  map_y <- max(world$map$y)
   pb <- txtProgressBar(min = 0, max = nrow(world$map), style = 3, width = 60)
   land_counter <- 0
   water_counter <- 0
@@ -8,14 +6,9 @@ assign_bodies <- function(world) {
   for (i in 1:nrow(world$map)) {
   # for (i in 1) {
     setTxtProgressBar(pb, i)
-    # determine the range of nearby cells
-    range_x <- wrapped_range(world$map$x[i], 1, map_x)
-    range_y <- wrapped_range(world$map$y[i], 1, map_y)
 
-    # pick the cells that match the x and y parameters
-    rows_x <- world$map$x %in% range_x
-    rows_y <- world$map$y %in% range_y
-    neighbours <- world$map[rows_x & rows_y, ]
+    link <- neighbour_ids(world, i)
+    neighbours <- world$map[link, ]
     # look only at cells that are of the same land type
     neighbours <- neighbours[neighbours$land == world$map$land[i], ]
     # if any already has a number, we're in the same
@@ -98,11 +91,15 @@ assign_vertical_terrain <- function(world) {
 }
 
 assign_water_terrain <- function(world, lake_threshold = 50) {
+  world$map$ocean <- FALSE
   world$map$terrain[world$map$topography == "deep_water"] <- "deep ocean"
+  world$map$ocean[world$map$topography == "deep_water"] <- TRUE
   world$map$terrain[world$map$topography == "water"] <- "ocean"
+  world$map$ocean[world$map$topography == "water"] <- TRUE
   small <- world$bodies$n_tiles <= lake_threshold
   waterbodies <- !(world$bodies$land)
   lakes <- world$bodies$body[small & waterbodies]
   world$map$terrain[world$map$body %in% lakes] <- "lake"
+  world$map$ocean[world$map$body %in% lakes] <- FALSE
   return(world)
 }
